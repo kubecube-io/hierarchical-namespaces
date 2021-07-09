@@ -25,7 +25,6 @@ import (
 	"github.com/go-logr/zapr"
 	corev1 "k8s.io/api/core/v1"
 
-	// Change to use v1 when we only need to support 1.17 and higher kubernetes versions.
 	stdzap "go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -33,6 +32,8 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	ctrl "sigs.k8s.io/controller-runtime"
+	// Change to use v1 when we only need to support 1.17 and higher kubernetes versions.
+	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
 
@@ -53,6 +54,7 @@ var (
 
 var (
 	metricsAddr             string
+	probeAddr               string
 	maxReconciles           int
 	enableLeaderElection    bool
 	leaderElectionId        string
@@ -81,6 +83,7 @@ func init() {
 func main() {
 	setupLog.Info("Parsing flags")
 	flag.StringVar(&metricsAddr, "metrics-addr", ":8080", "The address the metric endpoint binds to.")
+	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "enable-leader-election", false,
 		"Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager.")
 	flag.StringVar(&leaderElectionId, "leader-election-id", "controller-leader-election-helper",
@@ -165,14 +168,24 @@ func main() {
 	// it turns out to be harmful.
 	cfg.Burst = int(cfg.QPS * 1.5)
 	mgr, err := ctrl.NewManager(cfg, ctrl.Options{
-		Scheme:             scheme,
-		MetricsBindAddress: metricsAddr,
-		LeaderElection:     enableLeaderElection,
-		LeaderElectionID:   leaderElectionId,
-		Port:               webhookServerPort,
+		Scheme:                 scheme,
+		MetricsBindAddress:     metricsAddr,
+		LeaderElection:         enableLeaderElection,
+		LeaderElectionID:       leaderElectionId,
+		Port:                   webhookServerPort,
+		HealthProbeBindAddress: probeAddr,
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
+		os.Exit(1)
+	}
+
+	if err = mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
+		setupLog.Error(err, "unable to set up health check")
+		os.Exit(1)
+	}
+	if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
+		setupLog.Error(err, "unable to set up ready check")
 		os.Exit(1)
 	}
 
