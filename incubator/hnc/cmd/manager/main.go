@@ -25,6 +25,7 @@ import (
 	"github.com/go-logr/zapr"
 	corev1 "k8s.io/api/core/v1"
 
+	// Change to use v1 when we only need to support 1.17 and higher kubernetes versions.
 	stdzap "go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -32,7 +33,6 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	ctrl "sigs.k8s.io/controller-runtime"
-	// Change to use v1 when we only need to support 1.17 and higher kubernetes versions.
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
