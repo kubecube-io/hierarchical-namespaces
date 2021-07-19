@@ -232,6 +232,21 @@ docker-build: generate fmt vet
 	@echo "Warning: this does not run tests. Run 'make test' to ensure tests are passing."
 	docker build . -t ${HNC_IMG}
 
+buildx-setup:
+	## This script needs to be run to start the emulator for multiarch builds
+	# This driver translates the instruction set to different platforms
+	docker run --rm --privileged linuxkit/binfmt:v0.8
+	docker buildx create --use
+	docker buildx inspect --bootstrap
+
+# Build and push multi-arch image
+docker-push-multi: buildx-setup generate fmt vet
+	@echo "Warning: this does not run tests. Run 'make test' to ensure tests are passing."
+	docker buildx build \
+	--push \
+	--platform linux/arm64,linux/amd64,linux/arm/v7  --tag ${HNC_IMG} .
+
+
 ###################### KIND ACTIONS #########################
 
 # Creates a local kind cluster, destroying the old one if necessary.
