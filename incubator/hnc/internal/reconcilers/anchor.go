@@ -373,6 +373,7 @@ func (r *AnchorReconciler) writeNamespace(ctx context.Context, log logr.Logger, 
 	inst := &corev1.Namespace{}
 	inst.ObjectMeta.Name = nm
 	metadata.SetAnnotation(inst, api.SubnamespaceOf, pnm)
+	metadata.SetAnnotation(inst, api.AnnotationKubeCubeNs, "true")
 
 	// It's safe to use create here since if the namespace is created by someone
 	// else while this reconciler is running, returning an error will trigger a
