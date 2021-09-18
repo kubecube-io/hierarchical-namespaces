@@ -423,7 +423,9 @@ func (r *HierarchyConfigReconciler) syncAnchors(log logr.Logger, ns *forest.Name
 
 // Sync namespace tree labels and other labels. Return true if the labels are updated.
 func (r *HierarchyConfigReconciler) syncLabel(log logr.Logger, nsInst *corev1.Namespace, ns *forest.Namespace) bool {
-	if ns.IsExternal() {
+	_, ok := nsInst.GetAnnotations()[api.AnnotationKubeCubeNs]
+
+	if ns.IsExternal() && ok {
 		metadata.SetLabel(nsInst, nsInst.Name+api.LabelTreeDepthSuffix, "0")
 		return false
 	}
@@ -442,7 +444,9 @@ func (r *HierarchyConfigReconciler) syncLabel(log logr.Logger, nsInst *corev1.Na
 	depth := 0
 	for anc != nil {
 		l := anc.Name() + api.LabelTreeDepthSuffix
-		metadata.SetLabel(nsInst, l, strconv.Itoa(depth))
+		if ok {
+			metadata.SetLabel(nsInst, l, strconv.Itoa(depth))
+		}
 		if anc.HasLocalCritCondition() {
 			break
 		}
@@ -453,7 +457,9 @@ func (r *HierarchyConfigReconciler) syncLabel(log logr.Logger, nsInst *corev1.Na
 		if anc.IsExternal() {
 			for k, v := range anc.ExternalTreeLabels {
 				l = k + api.LabelTreeDepthSuffix
-				metadata.SetLabel(nsInst, l, strconv.Itoa(depth+v))
+				if ok {
+					metadata.SetLabel(nsInst, l, strconv.Itoa(depth+v))
+				}
 			}
 			break
 		}

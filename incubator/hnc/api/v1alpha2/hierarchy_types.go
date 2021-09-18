@@ -36,6 +36,9 @@ const (
 	AnnotationManagedBy       = MetaGroup + "/managed-by"
 	AnnotationPropagatePrefix = "propagate." + MetaGroup
 
+	// AnnotationKubeCubeNs means this namespace should managed by hnc
+	AnnotationKubeCubeNs = MetaGroup + "/ns"
+
 	AnnotationSelector     = AnnotationPropagatePrefix + "/select"
 	AnnotationTreeSelector = AnnotationPropagatePrefix + "/treeSelect"
 	AnnotationNoneSelector = AnnotationPropagatePrefix + "/none"
