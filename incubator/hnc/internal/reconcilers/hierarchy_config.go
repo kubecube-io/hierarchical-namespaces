@@ -421,6 +421,31 @@ func (r *HierarchyConfigReconciler) syncAnchors(log logr.Logger, ns *forest.Name
 	}
 }
 
+// trySetKubeCubeLabel try to set kubecube label if need.
+// 1. anc name had prefix "kubecube-project-" or "kubecube-tenant-"
+// 2. depth is 1 or 2
+func trySetKubeCubeLabel(nsInst *corev1.Namespace, anc *forest.Namespace, depth int) {
+	const (
+		projectPrefix = "kubecube-project-"
+		tenantPrefix  = "kubecube-tenant-"
+	)
+
+	ancName := anc.Name()
+	projectName := strings.TrimPrefix(ancName, projectPrefix)
+	tenantName := strings.TrimPrefix(ancName, tenantPrefix)
+
+	if projectName == ancName && tenantName == ancName {
+		return
+	}
+
+	switch depth {
+	case 1:
+		metadata.SetLabel(nsInst, api.LabelProjectNs, projectName)
+	case 2:
+		metadata.SetLabel(nsInst, api.LabelTenantNs, tenantName)
+	}
+}
+
 // Sync namespace tree labels and other labels. Return true if the labels are updated.
 func (r *HierarchyConfigReconciler) syncLabel(log logr.Logger, nsInst *corev1.Namespace, ns *forest.Namespace) bool {
 	_, ok := nsInst.GetAnnotations()[api.AnnotationKubeCubeNs]
@@ -446,6 +471,7 @@ func (r *HierarchyConfigReconciler) syncLabel(log logr.Logger, nsInst *corev1.Na
 		l := anc.Name() + api.LabelTreeDepthSuffix
 		if ok {
 			metadata.SetLabel(nsInst, l, strconv.Itoa(depth))
+			trySetKubeCubeLabel(nsInst, anc, depth)
 		}
 		if anc.HasLocalCritCondition() {
 			break
@@ -459,6 +485,7 @@ func (r *HierarchyConfigReconciler) syncLabel(log logr.Logger, nsInst *corev1.Na
 				l = k + api.LabelTreeDepthSuffix
 				if ok {
 					metadata.SetLabel(nsInst, l, strconv.Itoa(depth+v))
+					trySetKubeCubeLabel(nsInst, anc, depth+v)
 				}
 			}
 			break

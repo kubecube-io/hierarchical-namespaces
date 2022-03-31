@@ -29,6 +29,7 @@ const (
 
 // Constants for labels and annotations
 const (
+	KubeCube                  = "kubecube."
 	MetaGroup                 = "hnc.x-k8s.io"
 	LabelInheritedFrom        = MetaGroup + "/inherited-from"
 	FinalizerHasSubnamespace  = MetaGroup + "/hasSubnamespace"
@@ -37,7 +38,7 @@ const (
 	AnnotationPropagatePrefix = "propagate." + MetaGroup
 
 	// AnnotationKubeCubeNs means this namespace should managed by hnc
-	AnnotationKubeCubeNs = MetaGroup + "/ns"
+	AnnotationKubeCubeNs = KubeCube + MetaGroup + "/ns"
 
 	AnnotationSelector     = AnnotationPropagatePrefix + "/select"
 	AnnotationTreeSelector = AnnotationPropagatePrefix + "/treeSelect"
@@ -50,6 +51,14 @@ const (
 	// LabelExcludedNamespace is the label added by users on the namespaces that
 	// should be excluded from our validators, e.g. "kube-system".
 	LabelExcludedNamespace = MetaGroup + "/excluded-namespace"
+
+	// LabelTenantNs is along side with 'xxx.tree.hnc.x-k8s.io.depth:2'
+	// example: 'kubecube.hnc.x-k8s.io/tenant'
+	LabelTenantNs = KubeCube + MetaGroup + "/tenant"
+
+	// LabelProjectNs is along side with 'xxx.tree.hnc.x-k8s.io.depth:1'
+	// example: 'kubecube.hnc.x-k8s.io/project'
+	LabelProjectNs = KubeCube + MetaGroup + "/project"
 )
 
 const (
